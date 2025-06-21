@@ -1,7 +1,7 @@
-// backend/models/Disaster.js
+
 const mongoose = require('mongoose');
 
-// Schema for Disaster Records
+
 const disasterSchema = new mongoose.Schema({
     title: { type: String, required: true, trim: true },
     location_name: { type: String, required: true },
@@ -12,7 +12,7 @@ const disasterSchema = new mongoose.Schema({
             required: true
         },
         coordinates: {
-            type: [Number], // Stored as [longitude, latitude]
+            type: [Number], 
             required: true
         }
     },
@@ -21,10 +21,9 @@ const disasterSchema = new mongoose.Schema({
     owner_id: { type: String, required: true, index: true },
 }, { timestamps: true });
 
-// 2dsphere index is crucial for geospatial queries like $near
 disasterSchema.index({ location: '2dsphere' });
 
-// Schema for Nearby Resources
+
 const resourceSchema = new mongoose.Schema({
     name: { type: String, required: true },
     location_name: { type: String, required: true },
@@ -37,11 +36,11 @@ const resourceSchema = new mongoose.Schema({
 
 resourceSchema.index({ location: '2dsphere' });
 
-// Schema for Caching API Responses
+
 const cacheSchema = new mongoose.Schema({
     key: { type: String, required: true, unique: true, index: true },
-    value: { type: String, required: true }, // Store as a JSON string
-    // This TTL index automatically removes documents after the specified time
+    value: { type: String, required: true }, 
+    
     expires_at: { type: Date, required: true, index: { expires: '1s' } }
 });
 

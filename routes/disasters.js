@@ -1,4 +1,4 @@
-// backend/routes/disasters.js
+
 const express = require('express');
 const { Disaster, Resource, Cache } = require('../models/Disaster');
 const axios = require('axios');
@@ -8,20 +8,19 @@ const cheerio = require('cheerio');
 
 const router = express.Router();
 
-// --- Service Implementations (Included directly in this file) ---
 
 const geminiService = {
     extractLocationFromText: async (text) => {
         try {
             const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-            // CORRECTED: Using a current, valid model name to prevent 404 errors.
+          
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
             const prompt = `From the text, extract only the most specific, real-world location (e.g., city, well-known place). Example: from "Heavy flooding in Varanasi", extract "Varanasi". If no location is found, return "null". Text: "${text}"`;
             const result = await model.generateContent(prompt);
             return result.response.text().trim().replace(/^"|"$/g, '');
         } catch (error) {
             console.error("Gemini API error:", error);
-            // Propagate the error to be handled by the route's catch block
+           
             throw error;
         }
     }
@@ -70,7 +69,7 @@ const scrapingService = {
 };
 
 
-// --- Middleware for Caching ---
+
 const getFromCache = async (req, res, next) => {
     const key = req.originalUrl;
     try {
@@ -96,7 +95,7 @@ const setInCache = async (key, data, ttlSeconds) => {
 };
 
 
-// --- Geocoding Route ---
+
 router.post('/geocode', async (req, res) => {
     const { text } = req.body;
     if (!text) return res.status(400).json({ message: 'Text for geocoding is required.' });
@@ -118,7 +117,7 @@ router.post('/geocode', async (req, res) => {
 });
 
 
-// --- Disaster Routes ---
+
 router.post('/disasters', async (req, res) => {
     try {
         const { title, location_name, location, description, tags } = req.body;
@@ -144,11 +143,11 @@ router.get('/disasters', async (req, res) => {
 });
 
 
-// --- Disaster-Specific Detail Routes ---
+
 
 router.get('/disasters/:id/resources', async (req, res) => {
     try {
-        const { lat, lon, radius = 10000 } = req.query; // 10km radius
+        const { lat, lon, radius = 10000 } = req.query; 
         const resources = await Resource.find({
             location: {
                 $near: {
@@ -167,7 +166,7 @@ router.get('/disasters/:id/social-media', getFromCache, async (req, res) => {
     try {
         const mockApiUrl = `${req.protocol}://${req.get('host')}/api/mock-social-media`;
         const response = await axios.get(mockApiUrl);
-        await setInCache(req.originalUrl, response.data, 600); // Cache for 10 minutes
+        await setInCache(req.originalUrl, response.data, 600); 
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching social media updates.' });
@@ -180,14 +179,14 @@ router.get('/disasters/:id/official-updates', getFromCache, async (req, res) => 
         const fema = await scrapingService.scrapeFema();
         const redCross = await scrapingService.scrapeRedCross();
         const updates = { fema, redCross };
-        await setInCache(req.originalUrl, updates, 3600); // Cache for 1 hour
+        await setInCache(req.originalUrl, updates, 3600); 
         res.json(updates);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching official updates.' });
     }
 });
 
-// --- Self-hosted Mock Social Media Route used by other routes ---
+
 router.get('/mock-social-media', (req, res) => {
     res.json([
         { post: "#floodrelief Need food and water in downtown Varanasi.", user: "citizen1", timestamp: new Date() },
